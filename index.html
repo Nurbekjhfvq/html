@@ -11,115 +11,152 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             color: white;
             font-family: Arial, sans-serif;
             background-color: #f9f9f973;
+            padding: 10px;
+            text-align: center;
         }
 
         .question-container {
             background: #444;
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
             margin-bottom: 20px;
-            text-align: center;
+            width: 90%;
+            max-width: 400px;
         }
 
         .game-container {
             position: relative;
-            width: 300px;
-            height: 400px;
+            width: 80vw;
+            max-width: 400px;
+            height: 50vh;
+            max-height: 500px;
             border: 2px solid white;
             background-image: url('photo_2025-03-03_06-12-14.jpg');
-            /* Rasmingizning URL manzilini yozing */
             background-size: cover;
-            /* Rasm butun sahifani to‘ldirishi uchun */
             background-repeat: no-repeat;
-            /* Rasm takrorlanmasligi uchun */
             background-position: center;
-            /* Rasmni markazga joylash */
+            border-radius: 10px;
         }
 
         .player {
-            width: 50px;
-            height: 50px;
+            width: 15%;
+            height: auto;
             position: absolute;
             bottom: 0;
-            left: 130px;
+            left: 50%;
+            transform: translateX(-50%);
             transition: all 0.3s;
         }
 
         .answer-btn {
             background: #61dafb;
             border: none;
-            padding: 10px;
+            padding: 8px 12px;
             margin: 5px;
             cursor: pointer;
             border-radius: 5px;
+            font-size: clamp(14px, 2vw, 18px);
+            display: block;
+            width: 100%;
         }
 
         #win-message {
             display: none;
-            font-size: 34px;
+            font-size: clamp(24px, 3vw, 34px);
             color: rgb(232, 232, 3);
             margin-top: 20px;
+        }
+
+        /* RESPONSIVE MEDIA QUERIES */
+        @media (max-width: 600px) {
+            .question-container {
+                width: 250px;
+                padding: 10px;
+            }
+
+            .game-container {
+                height: 40vh;
+            }
+
+            .player {
+                width: 20%;
+            }
+
+            .answer-btn {
+                padding: 6px 10px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div style="position: absolute; left: 5px; top: 0px; color: #444; font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;">
+    <div style="position: absolute; left: 5px; top: -15px; color: #444; font-family: 'Lucida Sans', sans-serif;">
         <h5>Shodiyeva Nargiza <br> 21-maktab</h5>
     </div>
     <div class="question-container" id="question-container">
         <p id="question">Savol yuklanmoqda...</p>
-        <button class="answer-btn" onclick="checkAnswer(true)">To'g'ri</button>
-        <button class="answer-btn" onclick="checkAnswer(false)">Noto'g'ri</button>
+        <div id="answer-buttons"></div>
     </div>
 
     <div class="game-container">
-        <div class="player" id="player"> <img style="width: 80px; height: 80px;" src="2732627-795548.svg" alt=""></div>
+        <div class="player" id="player">
+            <img style="width: 100%; max-width: 80px;" src="2732627-795548.svg" alt="">
+        </div>
     </div>
 
     <p id="win-message">🏆 G'alaba! 🏆</p>
 
     <script>
         const player = document.getElementById("player");
-        const questionContainer = document.getElementById("question-container");
         const questionText = document.getElementById("question");
+        const answerButtons = document.getElementById("answer-buttons");
         const winMessage = document.getElementById("win-message");
         let position = 0;
-        const step = 60;
+        const step = 50;
         let questionIndex = 0;
 
         const questions = [
-            { question: "HTML nima?", correct: true },
-            { question: "CSS HTML ichida ishlaydi?", correct: false },
-            { question: "HTML ning to'g'ri tuzilishi muhimmi?", correct: true },
-            { question: "<div> bu HTML elementi?", correct: true },
-            { question: "CSS faqat rasm uchun ishlatiladimi?", correct: false },
-            { question: "HTML ning asosiy elementi <html> dir?", correct: true },
-            { question: "<head> qismida sayt tarkibi bo'ladi?", correct: false }
+            { question: "HTML nima uchun ishlatiladi?", options: ["Veb sahifalar yaratish", "Dasturlar yozish"], correct: 0 },
+            { question: "<h1> qanday element?", options: ["Paragraf","Sarlavha"], correct: 1 },
+            { question: "<img> nima uchun ishlatiladi?", options: ["Jadval yaratish","Rasm qo‘shish"], correct: 1 },
+            { question: "<a> tegining vazifasi?", options: ["Havola yaratish", "Rasm joylash"], correct: 0 },
+            { question: "HTML da ro‘yxat qaysi teg bilan yaratiladi?", options: ["<ul>", "<p>"], correct: 0 },
+            { question: "Formalar uchun qaysi teg ishlatiladi?", options: ["<div>","<form>"], correct: 1 },
+            { question: "HTML kodining asosiy qismi qayerda?", options: ["<body>", "<title>"], correct: 0 }
         ];
 
         function loadQuestion() {
             if (questionIndex < questions.length) {
-                questionText.innerText = questions[questionIndex].question;
-                questionContainer.dataset.correct = questions[questionIndex].correct;
+                let currentQ = questions[questionIndex];
+                questionText.innerText = currentQ.question;
+                answerButtons.innerHTML = ""; // Avvalgi variantlarni o‘chiramiz
+                
+                // Har bir javob uchun tugma yaratamiz
+                currentQ.options.forEach((option, index) => {
+                    const button = document.createElement("button");
+                    button.innerText = option;
+                    button.classList.add("answer-btn");
+                    button.onclick = () => checkAnswer(index);
+                    answerButtons.appendChild(button);
+                });
+            } else {
+                document.getElementById("question-container").style.display = "none";
+                winMessage.style.display = "block";
             }
         }
 
-        function checkAnswer(answer) {
-            if (answer.toString() === questionContainer.dataset.correct) {
+        function checkAnswer(selectedIndex) {
+            let correctIndex = questions[questionIndex].correct;
+
+            if (selectedIndex === correctIndex) {
                 position += step;
                 player.style.bottom = position + "px";
                 questionIndex++;
-                if (questionIndex < questions.length) {
-                    loadQuestion();
-                } else {
-                    questionContainer.style.display = "none";
-                    winMessage.style.display = "block";
-                }
+                loadQuestion();
             } else {
                 alert("Noto'g'ri javob! Qaytadan urinib ko'ring.");
             }
